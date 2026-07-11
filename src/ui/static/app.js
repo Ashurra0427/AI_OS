@@ -4,15 +4,31 @@
   const form = document.getElementById('chat-form');
   const input = document.getElementById('chat-input');
   const pending = document.getElementById('pending-actions');
+  const toolCalls = document.getElementById('tool-calls');
   const audit = document.getElementById('audit-log');
   const status = document.getElementById('system-status');
+  const agentBadge = document.getElementById('agent-badge');
+  const agentPills = document.querySelectorAll('.agent-pill');
 
-  function addMsg(role, text) {
+  function addMsg(role, text, agent, tools) {
     const el = document.createElement('div');
     el.className = `msg ${role}`;
-    el.innerHTML = `<div>${text}</div><div class="meta">${new Date().toLocaleTimeString()}</div>`;
+    let html = '';
+    if (agent) html += `<div class="agent-tag">Agent: ${agent}</div>`;
+    html += `<div>${text}</div>`;
+    html += `<div class="meta">${new Date().toLocaleTimeString()}</div>`;
+    if (tools && tools.length) {
+      html += `<div class="tool-tag">Tools: ${tools.join(', ')}</div>`;
+    }
+    el.innerHTML = html;
     history.appendChild(el);
     history.scrollTop = history.scrollHeight;
+  }
+
+  function addToolCall(tool, server, status) {
+    const li = document.createElement('li');
+    li.textContent = `${tool} (${server}) — ${status}`;
+    toolCalls.prepend(li);
   }
 
   function addAudit(item) {
@@ -21,28 +37,32 @@
     audit.prepend(li);
   }
 
-  function renderPending() {
-    pending.innerHTML = '';
-    const items = JSON.parse(localStorage.getItem('pending_actions') || '[]');
-    items.forEach((it, idx) => {
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${it.agent}</strong>: ${it.action}<br><button data-idx="${idx}" class="approve">Approve</button> <button data-idx="${idx}" class="reject">Reject</button>`;
-      pending.appendChild(li);
-    });
+  function setActiveAgent(name) {
+    agentPills.forEach(p => p.classList.toggle('active', p.dataset.agent === name));
+    if (name) agentBadge.textContent = name;
   }
 
-  ws.onopen = () => addMsg('assistant', 'Connected to JARVIS.');
+  ws.onopen = () => {
+    addMsg('assistant', 'Connected to JARVIS. All systems online.', 'system', []);
+    setActiveAgent('system');
+  };
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
-    if (msg.type === 'response') addMsg('assistant', msg.text);
-    else if (msg.type === 'error') addMsg('assistant', 'Error: ' + msg.error);
+    if (msg.type === 'response') {
+      addMsg('assistant', msg.text, msg.agent || 'assistant', msg.tools || []);
+      setActiveAgent(msg.agent || '');
+    } else if (msg.type === 'error') {
+      addMsg('assistant', 'Error: ' + msg.error, 'system', []);
+    } else if (msg.type === 'tool_call') {
+      addToolCall(msg.tool, msg.server, msg.status || 'called');
+    }
   };
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = input.value.trim();
     if (!text) return;
-    addMsg('user', text);
+    addMsg('user', text, 'user', []);
     ws.send(JSON.stringify({ type: 'chat', text }));
     input.value = '';
   });

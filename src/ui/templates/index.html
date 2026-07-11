@@ -8,13 +8,24 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>JARVIS-AI-OS</h1>
+    <div class="brand">
+      <h1>JARVIS-AI-OS</h1>
+      <span class="badge" id="agent-badge">Ready</span>
+    </div>
     <div id="input-control-indicator" class="indicator hidden" title="Agent has input control">
       <span class="dot"></span> INPUT CONTROL ACTIVE
     </div>
   </header>
   <main class="layout">
     <section class="panel chat">
+      <div class="agent-bar">
+        <div class="agent-pill active" data-agent="fast">Fast-Response</div>
+        <div class="agent-pill" data-agent="planner">Planner</div>
+        <div class="agent-pill" data-agent="research">Research</div>
+        <div class="agent-pill" data-agent="coding">Coding</div>
+        <div class="agent-pill" data-agent="vision">Vision</div>
+        <div class="agent-pill" data-agent="communication">Communication</div>
+      </div>
       <div id="chat-history" class="chat-history"></div>
       <form id="chat-form" class="chat-form">
         <input id="chat-input" type="text" placeholder="Ask JARVIS..." autocomplete="off" />
@@ -25,6 +36,10 @@
       <div class="card">
         <h2>Pending Actions</h2>
         <ul id="pending-actions"></ul>
+      </div>
+      <div class="card">
+        <h2>Tool Calls</h2>
+        <ul id="tool-calls"></ul>
       </div>
       <div class="card">
         <h2>Audit Log</h2>

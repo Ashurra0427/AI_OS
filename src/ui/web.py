@@ -80,41 +80,47 @@ async def ws_endpoint(websocket: WebSocket) -> None:
                 await websocket.send_json({"type": "pong"})
             elif msg_type == "chat":
                 text = str(payload.get("text", ""))
+                agent_used = "fast"
+                tools_used = []
+                response_text = ""
                 try:
-                    _ = httpx.post(
-                        f"http://{settings.mcp_gateway_host}:{settings.mcp_gateway_port}/grants",
-                        json={
-                            "agent": "web_user",
-                            "server": "filesystem",
-                            "tools": ["read_file", "list_directory"],
-                            "scopes": {"path": str(settings.data_dir)},
-                            "granted_by": "web_user",
-                        },
-                        timeout=5.0,
-                    )
-                    list_resp = httpx.post(
-                        f"http://{settings.mcp_gateway_host}:{settings.mcp_gateway_port}/tools/call",
-                        json={"agent": "web_user", "server": "filesystem", "tool": "list_directory", "arguments": {"path": str(settings.data_dir)}},
-                        timeout=5.0,
-                    )
-                    fs_info = ""
-                    if list_resp.status_code == 200:
-                        fs_data = list_resp.json()
-                        if fs_data.get("result"):
-                            fs_info = f"\n\nFilesystem context: {fs_data['result']}"
+                    from src.agents.fast_response import FastResponseAgent
+                    from src.agents.planner import PlannerAgent
+                    from src.agents.research import ResearchAgent
+                    fast = FastResponseAgent(name="fast", mcp_client=_mcp)
+                    fast_resp = await fast.execute({"text": text})
+                    response_text = fast_resp.get("response", "")
+                    if response_text and not response_text.startswith("["):
+                        agent_used = "fast"
+                    else:
+                        planner = PlannerAgent(name="planner", mcp_client=_mcp)
+                        plan = await planner.execute({"text": text})
+                        agent_used = "planner"
+                        steps = plan.get("plan", [])
+                        response_text = f"Delegated to {len(steps)} steps: " + ", ".join(f"{s['agent']}: {s['action']}" for s in steps)
+                        tools_used = ["MoERouter", "Planner"]
+                        if "search" in text.lower() or "find" in text.lower() or "look up" in text.lower():
+                            try:
+                                research = ResearchAgent(name="research", mcp_client=_mcp)
+                                research_resp = await research.execute({"query": text})
+                                results = research_resp.get("results", [])
+                                if results:
+                                    response_text += f"\n\nFound {len(results)} results:\n"
+                                    for i, r in enumerate(results[:3], 1):
+                                        response_text += f"{i}. {r.get('title', '')}\n   {r.get('url', '')}\n   {r.get('snippet', '')}\n"
+                                    tools_used.append("web_search")
+                            except Exception:
+                                pass
                 except Exception as exc:
-                    logger.warning("mcp_facade_failed", error=str(exc))
-                    fs_info = ""
-                from src.agents.fast_response import FastResponseAgent
-                from src.agents.planner import PlannerAgent
-                fast = FastResponseAgent(name="fast", mcp_client=_mcp)
-                fast_resp = await fast.execute({"text": text})
-                response_text = fast_resp.get("response", "")
-                if not response_text:
-                    planner = PlannerAgent(name="planner", mcp_client=_mcp)
-                    plan = await planner.execute({"text": text})
-                    response_text = f"Plan: {json.dumps(plan.get('plan', []))}"
-                await websocket.send_json({"type": "response", "text": response_text + fs_info})
+                    logger.warning("agent_pipeline_failed", error=str(exc))
+                    response_text = f"Agent pipeline error: {exc}"
+                    agent_used = "error"
+                await websocket.send_json({
+                    "type": "response",
+                    "text": response_text,
+                    "agent": agent_used,
+                    "tools": tools_used,
+                })
             elif msg_type == "approve_action":
                 await websocket.send_json({"type": "response", "text": "Action approved and executed."})
             else:
