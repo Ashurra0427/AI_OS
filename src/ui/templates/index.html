@@ -1,0 +1,43 @@
+"""JARVIS dashboard template."""
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JARVIS-AI-OS</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>JARVIS-AI-OS</h1>
+    <div id="input-control-indicator" class="indicator hidden" title="Agent has input control">
+      <span class="dot"></span> INPUT CONTROL ACTIVE
+    </div>
+  </header>
+  <main class="layout">
+    <section class="panel chat">
+      <div id="chat-history" class="chat-history"></div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask JARVIS..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+    <section class="panel side">
+      <div class="card">
+        <h2>Pending Actions</h2>
+        <ul id="pending-actions"></ul>
+      </div>
+      <div class="card">
+        <h2>Audit Log</h2>
+        <ul id="audit-log"></ul>
+      </div>
+      <div class="card">
+        <h2>System Status</h2>
+        <pre id="system-status">Loading...</pre>
+      </div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

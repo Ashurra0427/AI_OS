@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis-ai-os"
+version = "0.1.0"
+description = "JARVIS-AI-OS: AI-native operating system layer"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "JARVIS Team"},
+]
+keywords = ["ai", "os", "agent", "mcp", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "structlog>=23.0",
+    "pyzmq>=25.0",
+    "httpx>=0.27",
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "redis>=5.0",
+    "celery>=5.3",
+    "cryptography>=42.0",
+    "pyjwt>=2.8",
+    "passlib>=1.7",
+    "python-multipart>=0.0.9",
+    "tenacity>=8.2",
+    "python-dotenv>=1.0",
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+    "rank-bm25>=0.2",
+    "openai>=1.0",
+    "anthropic>=0.18",
+    "groq>=0.4",
+    "edge-tts>=6.1",
+    "kokoro>=0.3",
+    "pillow>=10.0",
+    "opencv-python>=4.9",
+    "numpy>=1.26",
+    "aiofiles>=23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "ruff>=0.3",
+    "mypy>=1.9",
+    "types-redis",
+    "types-pyyaml",
+]
+
+[project.scripts]
+jarvis = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short --strict-markers"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true

@@ -1,0 +1,43 @@
+:root {
+  --bg: #0b0f17;
+  --panel: #111827;
+  --border: #1f2937;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #60a5fa;
+  --danger: #ef4444;
+  --success: #22c55e;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, sans-serif; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.topbar h1 { font-size: 16px; margin: 0; letter-spacing: 0.5px; }
+.indicator {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 999px; background: rgba(239, 68, 68, 0.15); color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 700; font-size: 12px;
+}
+.indicator.hidden { display: none; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+.layout { display: grid; grid-template-columns: 1fr 320px; gap: 12px; padding: 12px; height: calc(100% - 53px); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+.chat { }
+.chat-history { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
+.chat-form input { flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.chat-form button { padding: 8px 12px; border-radius: 6px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
+.msg { padding: 8px 10px; border-radius: 6px; max-width: 85%; }
+.msg.user { align-self: flex-end; background: #1e3a8a; }
+.msg.assistant { align-self: flex-start; background: #0f172a; border: 1px solid var(--border); }
+.msg .meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.side { gap: 12px; padding: 12px; overflow: auto; }
+.card { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
+.card h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.card ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.card li { padding: 4px 0; border-bottom: 1px solid var(--border); }
+.card li:last-child { border-bottom: none; }
+pre { margin: 0; font-size: 12px; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
