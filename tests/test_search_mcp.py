@@ -1,33 +1,26 @@
-"""Tests for Search MCP server."""
+"""Tests for Search MCP server — DuckDuckGo backend."""
 
 from __future__ import annotations
 
-import httpx
 import pytest
 
-from src.config.settings import settings
 from src.mcp.servers.search import SearchMCPServer
 
 
 @pytest.mark.asyncio
-async def test_search_without_key() -> None:
-    original = settings.search_api_key
-    settings.search_api_key = None
-    try:
-        server = SearchMCPServer()
-        with pytest.raises(RuntimeError, match="search_api_key not configured"):
-            await server.call_tool("web_search", {"query": "test"})
-    finally:
-        settings.search_api_key = original
+async def test_search_returns_results() -> None:
+    server = SearchMCPServer()
+    results = await server.call_tool("web_search", {"query": "python programming", "max_results": 3})
+    assert isinstance(results, list)
+    assert len(results) <= 3
+    if results:
+        assert "title" in results[0]
+        assert "url" in results[0]
+        assert "snippet" in results[0]
 
 
 @pytest.mark.asyncio
-async def test_search_forced_failure_logs() -> None:
+async def test_search_no_api_key_required() -> None:
     server = SearchMCPServer()
-    original_key = settings.search_api_key
-    settings.search_api_key = "invalid-key"
-    try:
-        with pytest.raises(httpx.HTTPStatusError):
-            await server.call_tool("web_search", {"query": "test"})
-    finally:
-        settings.search_api_key = original_key
+    results = await server.call_tool("web_search", {"query": "test"})
+    assert isinstance(results, list)

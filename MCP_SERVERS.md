@@ -3,7 +3,7 @@
 | Server | Domain | Tools | Backing | Status |
 |---|---|---|---|---|
 | **Filesystem** | Local file I/O | read_file, write_file, list_directory, delete_file | OS filesystem, scoped by permission broker | Implemented |
-| **Search/Research** | Web search | web_search, fetch_url | Tavily API (real API key via header) | Implemented |
+| **Search/Research** | Web search | web_search, fetch_url | DuckDuckGo (free, no API key required) | Implemented |
 | **Email** | Email operations | list, draft, send | Gmail API / Microsoft Graph (key required) | Implemented (stub API) |
 | **Messaging** | Multi-channel messaging | list_channels, draft, send | WhatsApp Business API, Slack, Telegram, SMS | Implemented (stub channels) |
 | **Browser/Automation** | Browser control | navigate, screenshot, click, type | LAM browser MCP wrapper | Implemented |

@@ -1,11 +1,9 @@
-"""Search/research MCP server — backed by Tavily real search API."""
+"""Search/research MCP server — backed by DuckDuckGo (free, no API key required)."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
-
-import httpx
 
 from src.config.settings import settings
 
@@ -17,7 +15,7 @@ class SearchMCPServer:
         self.tools = [
             {
                 "name": "web_search",
-                "description": "Search the web using Tavily API",
+                "description": "Search the web using DuckDuckGo (free, no API key required)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -52,28 +50,25 @@ class SearchMCPServer:
             raise ValueError(f"Unknown tool: {tool}")
 
     async def _web_search(self, query: str, max_results: int) -> list[dict]:
-        if not settings.search_api_key:
-            raise RuntimeError("search_api_key not configured")
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                settings.search_api_url,
-                json={"query": query, "max_results": max_results},
-                headers={"X-TAVILY-API-KEY": settings.search_api_key},
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        try:
+            from duckduckgo_search import DDGS
+            ddgs = DDGS()
             results = []
-            for item in data.get("results", [])[:max_results]:
+            for r in ddgs.text(query, max_results=max_results):
                 results.append({
-                    "title": item.get("title"),
-                    "url": item.get("url"),
-                    "snippet": item.get("snippet"),
+                    "title": r.get("title"),
+                    "url": r.get("href"),
+                    "snippet": r.get("body"),
                 })
             if not results:
-                logger.warning("search_returned_empty", query=query)
+                logger.warning("search_returned_empty query=%s", query)
             return results
+        except Exception as exc:
+            logger.error("search_failed query=%s error=%s", query, str(exc))
+            raise RuntimeError(f"DuckDuckGo search failed: {exc}") from exc
 
     async def _fetch_url(self, url: str) -> str:
+        import httpx
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             resp = await client.get(url)
             resp.raise_for_status()

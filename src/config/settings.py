@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     tts_local_model: str = "hexgrad/Kokoro-82M"
 
     search_api_key: str | None = None
-    search_api_url: str = "https://api.tavily.com/search"
+    search_api_url: str = "duckduckgo"
 
     email_provider: str = "gmail"
     email_api_key: str | None = None
