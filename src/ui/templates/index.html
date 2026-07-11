@@ -12,8 +12,16 @@
       <h1>JARVIS-AI-OS</h1>
       <span class="badge" id="agent-badge">Ready</span>
     </div>
-    <div id="input-control-indicator" class="indicator hidden" title="Agent has input control">
-      <span class="dot"></span> INPUT CONTROL ACTIVE
+    <div class="topbar-actions">
+      <button id="mic-btn" class="icon-btn" title="Hold to speak (STT)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+      </button>
+      <button id="tts-btn" class="icon-btn" title="Toggle voice output (TTS)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      </button>
+      <button id="clear-btn" class="icon-btn" title="Clear chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
     </div>
   </header>
   <main class="layout">

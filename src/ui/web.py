@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import tempfile
 from pathlib import Path
 
 import httpx
@@ -50,22 +51,50 @@ async def init_database() -> JSONResponse:
 
 
 @app.post("/api/speech/transcribe")
-async def speech_transcribe(audio_path: str) -> JSONResponse:
-    from src.services.speech import SpeechPipeline
-    pipeline = SpeechPipeline()
-    text = await pipeline.transcribe(audio_path)
-    return JSONResponse({"text": text})
+async def speech_transcribe(request: Request) -> JSONResponse:
+    content_type = request.headers.get('content-type', '')
+    audio_path = None
+    if 'multipart/form-data' in content_type:
+        form = await request.form()
+        upload = form.get('file')
+        if upload:
+            with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as f:
+                f.write(await upload.read())
+                audio_path = f.name
+    else:
+        body = await request.body()
+        if body:
+            with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as f:
+                f.write(body)
+                audio_path = f.name
+    if not audio_path:
+        return JSONResponse({"text": ""})
+    try:
+        from src.services.speech import SpeechPipeline
+        pipeline = SpeechPipeline()
+        text = await pipeline.transcribe(audio_path)
+        return JSONResponse({"text": text})
+    except Exception as exc:
+        logger.error("speech_transcribe_failed", error=str(exc))
+        return JSONResponse({"text": ""})
+    finally:
+        try:
+            Path(audio_path).unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 @app.post("/api/speech/speak")
 async def speech_speak(text: str) -> JSONResponse:
-    import tempfile
-
-    from src.services.speech import SpeechPipeline
-    pipeline = SpeechPipeline()
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        path = await pipeline.speak(text, f.name)
-        return JSONResponse({"audio_path": path})
+    try:
+        from src.services.speech import SpeechPipeline
+        pipeline = SpeechPipeline()
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            path = await pipeline.speak(text, f.name)
+            return JSONResponse({"audio_path": path})
+    except Exception as exc:
+        logger.error("speech_speak_failed", error=str(exc))
+        return JSONResponse({"audio_path": ""})
 
 
 @app.websocket("/ws")

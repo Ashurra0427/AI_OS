@@ -9,6 +9,14 @@
   const status = document.getElementById('system-status');
   const agentBadge = document.getElementById('agent-badge');
   const agentPills = document.querySelectorAll('.agent-pill');
+  const micBtn = document.getElementById('mic-btn');
+  const ttsBtn = document.getElementById('tts-btn');
+  const clearBtn = document.getElementById('clear-btn');
+
+  let ttsEnabled = false;
+  let isRecording = false;
+  let mediaRecorder = null;
+  let audioChunks = [];
 
   function addMsg(role, text, agent, tools) {
     const el = document.createElement('div');
@@ -23,6 +31,9 @@
     el.innerHTML = html;
     history.appendChild(el);
     history.scrollTop = history.scrollHeight;
+    if (role === 'assistant' && ttsEnabled && text) {
+      speak(text);
+    }
   }
 
   function addToolCall(tool, server, status) {
@@ -41,6 +52,80 @@
     agentPills.forEach(p => p.classList.toggle('active', p.dataset.agent === name));
     if (name) agentBadge.textContent = name;
   }
+
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    utter.pitch = 1;
+    window.speechSynthesis.speak(utter);
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, 'audio.webm');
+        addMsg('assistant', 'Listening...', 'system', []);
+        try {
+          const res = await fetch('/api/speech/transcribe', {
+            method: 'POST',
+            body: blob,
+            headers: { 'Content-Type': 'audio/webm' },
+          });
+          const data = await res.json();
+          if (data.text && data.text.trim()) {
+            addMsg('user', data.text, 'user', []);
+            ws.send(JSON.stringify({ type: 'chat', text: data.text }));
+          }
+        } catch (exc) {
+          addMsg('assistant', 'STT failed: ' + exc.message, 'system', []);
+        }
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+      isRecording = true;
+      micBtn.classList.add('recording');
+    } catch (exc) {
+      addMsg('assistant', 'Microphone access denied: ' + exc.message, 'system', []);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      isRecording = false;
+      micBtn.classList.remove('recording');
+    }
+  }
+
+  micBtn.addEventListener('mousedown', () => startRecording());
+  micBtn.addEventListener('mouseup', () => stopRecording());
+  micBtn.addEventListener('mouseleave', () => { if (isRecording) stopRecording(); });
+  micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
+  micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
+
+  ttsBtn.addEventListener('click', () => {
+    ttsEnabled = !ttsEnabled;
+    ttsBtn.classList.toggle('active', ttsEnabled);
+    if (!ttsEnabled) window.speechSynthesis.cancel();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    history.innerHTML = '';
+    toolCalls.innerHTML = '';
+    audit.innerHTML = '';
+    pending.innerHTML = '';
+    addMsg('assistant', 'Chat cleared. Ready.', 'system', []);
+  });
 
   ws.onopen = () => {
     addMsg('assistant', 'Connected to JARVIS. All systems online.', 'system', []);
