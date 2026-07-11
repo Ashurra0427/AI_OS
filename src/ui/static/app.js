@@ -53,6 +53,7 @@
       const items = JSON.parse(localStorage.getItem('pending_actions') || '[]');
       items.splice(idx, 1);
       localStorage.setItem('pending_actions', JSON.stringify(items));
+      ws.send(JSON.stringify({ type: 'approve_action', idx }));
       renderPending();
     }
   });

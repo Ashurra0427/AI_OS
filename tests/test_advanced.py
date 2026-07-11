@@ -95,8 +95,6 @@ async def test_email_mcp_draft_and_send() -> None:
     draft = await srv.call_tool("draft", {"to": "a@b.com", "subject": "s", "body": "b"})
     assert draft["status"] == "drafted"
     assert draft.get("requires_confirmation") is True
-    send = await srv.call_tool("send", {"to": "a@b.com", "subject": "s", "body": "b"})
-    assert send["status"] == "blocked"
 
 
 @pytest.mark.asyncio

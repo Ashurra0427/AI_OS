@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.config.settings import settings
-
 logger = logging.getLogger(__name__)
 
 
