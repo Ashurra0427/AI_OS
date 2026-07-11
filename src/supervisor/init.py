@@ -26,7 +26,7 @@ class Supervisor:
         while not self._shutdown:
             try:
                 svc = factory()
-                if asyncio.iscoroutinefunction(svc):
+                if asyncio.iscoroutine(svc):
                     await svc
                 else:
                     svc()

@@ -13,8 +13,15 @@ from src.supervisor.init import Supervisor
 from src.ui.web import app as ui_app
 
 
-def _run_ui() -> None:
-    uvicorn.run(ui_app, host=settings.mcp_gateway_host, port=settings.mcp_gateway_port + 1, log_level="warning")
+async def _run_ui() -> None:
+    config = uvicorn.Config(
+        ui_app,
+        host=settings.mcp_gateway_host,
+        port=settings.mcp_gateway_port + 1,
+        log_level="warning",
+    )
+    server = uvicorn.Server(config)
+    await server.serve()
 
 
 def main() -> int:
